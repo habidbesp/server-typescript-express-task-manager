@@ -3,6 +3,7 @@ import { body, param } from "express-validator";
 import { handleInputErrors } from "../middleware/validation";
 import { ProjectController } from "../controllers/ProjectController";
 import { TaskController } from "../controllers/TaskController";
+import { validateProjectExists } from "../middleware/project";
 
 const router = Router();
 
@@ -42,6 +43,15 @@ router.delete(
 );
 
 /** Routes for Task */
-router.post("/:projectId/tasks", TaskController.createTask);
+router.post(
+  "/:projectId/tasks",
+  body("name").notEmpty().withMessage("Task name is required"),
+  body("description").notEmpty().withMessage("Task description is required"),
+  handleInputErrors,
+  validateProjectExists,
+  TaskController.createTask
+);
+
+router.get("/:projectId/tasks", TaskController.getProjectTasks);
 
 export default router;

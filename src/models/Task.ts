@@ -32,9 +32,13 @@ const TaskSchema: Schema = new Schema(
     project: {
       type: Types.ObjectId,
       ref: "Project",
+      required: true,
     },
-    status: Object.values(taskStatus),
-    default: taskStatus.PENDING,
+    status: {
+      type: String,
+      enum: Object.values(taskStatus),
+      default: taskStatus.PENDING,
+    },
   },
   {
     versionKey: false,
