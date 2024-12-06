@@ -19,7 +19,10 @@ export class TaskController {
     res: Response
   ): Promise<void> => {
     try {
-      console.log(req.params.projectId);
+      const tasks = await Task.find({ project: req.project.id }).populate(
+        "project"
+      );
+      res.status(200).json(tasks);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
