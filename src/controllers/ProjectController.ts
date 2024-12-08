@@ -28,15 +28,13 @@ export class ProjectController {
     res: Response
   ): Promise<void> => {
     try {
-      const projectById = await Project.findById(req.params.id).populate(
-        "tasks"
-      );
-      if (!projectById) {
+      const project = await Project.findById(req.params.id).populate("tasks");
+      if (!project) {
         const error = new Error("Project not found.");
         res.status(404).json({ error: error.message });
         return;
       }
-      res.status(200).json(projectById);
+      res.status(200).json(project);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
@@ -44,17 +42,13 @@ export class ProjectController {
 
   static updateProject = async (req: Request, res: Response): Promise<void> => {
     try {
-      const projectToUpdate = await Project.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        { new: true }
-      );
-      if (!projectToUpdate) {
-        const error = new Error("Project not found.");
-        res.status(404).json({ error: error.message });
-        return;
-      }
-      res.status(200).json(projectToUpdate);
+      req.project.projectName = req.body.projectName;
+      req.project.clientName = req.body.clientName;
+      req.project.description = req.body.description;
+
+      await req.project.save();
+
+      res.status(200).send("Poject successfully updated!");
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
@@ -62,15 +56,10 @@ export class ProjectController {
 
   static deleteProject = async (req: Request, res: Response): Promise<void> => {
     try {
-      const projectToDelete = await Project.findByIdAndDelete(req.params.id);
-      if (!projectToDelete) {
-        const error = new Error("Project not found.");
-        res.status(404).json({ error: error.message });
-        return;
-      }
+      await req.project.deleteOne();
       res
         .status(200)
-        .send("Project: '" + projectToDelete.projectName + "' was deleted");
+        .send("Project: '" + req.project.projectName + "' was deleted");
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

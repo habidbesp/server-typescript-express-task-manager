@@ -4,3 +4,6 @@
 .development.env
 
 dummyData.json
+package-lock.json
+.DS_Store
+dist

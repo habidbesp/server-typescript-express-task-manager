@@ -30,11 +30,6 @@ export class TaskController {
 
   static getTaskById = async (req: Request, res: Response): Promise<void> => {
     try {
-      if (req.task.project.toString() !== req.project.id) {
-        const error = new Error("Invalid Action.");
-        res.status(400).json({ error: error.message });
-        return;
-      }
       res.status(200).json(req.task);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -43,11 +38,6 @@ export class TaskController {
 
   static updateTask = async (req: Request, res: Response): Promise<void> => {
     try {
-      if (req.task.project.toString() !== req.project.id) {
-        const error = new Error("Invalid Action.");
-        res.status(400).json({ error: error.message });
-        return;
-      }
       req.task.name = req.body.name;
       req.task.description = req.body.description;
       await req.task.save();
@@ -59,19 +49,11 @@ export class TaskController {
 
   static deleteTask = async (req: Request, res: Response): Promise<void> => {
     try {
-      if (req.task.project.toString() !== req.project.id) {
-        const error = new Error("Invalid Action.");
-        res.status(400).json({ error: error.message });
-        return;
-      }
-      req.project.tasks = req.project.tasks.filter(
-        (task) => task.toString() !== req.task.id.toString()
-      );
       await Promise.allSettled([req.task.deleteOne(), req.project.save()]);
       res
         .status(200)
         .send(
-          `Task "${req.task.name}" in project "${req.project.projectName}" was deleted. id: ${req.task.id}`
+          `Task "${req.task.name}" in project "${req.project.projectName}" was deleted - id: ${req.task.id}`
         );
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -83,11 +65,6 @@ export class TaskController {
     res: Response
   ): Promise<void> => {
     try {
-      if (req.task.project.toString() !== req.project.id) {
-        const error = new Error("Invalid Action.");
-        res.status(400).json({ error: error.message });
-        return;
-      }
       req.task.status = req.body.status;
       await req.task.save();
       res.status(200).send(`Task status successfully updated`);
