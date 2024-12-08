@@ -4,7 +4,7 @@ import { handleInputErrors } from "../middleware/validation";
 import { ProjectController } from "../controllers/ProjectController";
 import { TaskController } from "../controllers/TaskController";
 import { projectExists } from "../middleware/project";
-import { taskExists } from "../middleware/task";
+import { taskBelongsToProject, taskExists } from "../middleware/task";
 
 const router = Router();
 
@@ -19,12 +19,18 @@ router.post(
 
 router.get("/", ProjectController.getAllProjects);
 
+// Middleware to preload the project document whenever a route contains param "id".
+router.param("id", projectExists);
+
 router.get(
   "/:id",
   param("id").isMongoId().withMessage("ID not valid"),
   handleInputErrors,
   ProjectController.getProjectById
 );
+
+// Middleware to preload the project document whenever a route contains param "id".
+router.param("id", projectExists);
 
 router.put(
   "/:id",
@@ -45,6 +51,7 @@ router.delete(
 
 /** Routes for Task */
 
+// Middleware to preload the project document whenever a route contains param "projectId".
 router.param("projectId", projectExists);
 
 router.post(
@@ -57,8 +64,11 @@ router.post(
 
 router.get("/:projectId/tasks", TaskController.getProjectTasks);
 
-// Middleware to preload the task document whenever a route contains "taskId"
+// Middleware to preload the task document whenever a route contains param "taskId".
 router.param("taskId", taskExists);
+
+// Middleware to to verify if a task belongs to a project whenever a route contains param "taskId".
+router.param("taskId", taskBelongsToProject);
 
 router.get(
   "/:projectId/tasks/:taskId",

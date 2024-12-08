@@ -17,7 +17,7 @@ export async function taskExists(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     const task = await Task.findById(req.params.taskId);
     if (!task) {
@@ -26,6 +26,23 @@ export async function taskExists(
       return;
     }
     req.task = task;
+    next();
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export function taskBelongsToProject(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
+  try {
+    if (req.task.project.toString() !== req.project.id.toString()) {
+      const error = new Error("Invalid Action.");
+      res.status(400).json({ error: error.message });
+      return;
+    }
     next();
   } catch (error) {
     res.status(500).json({ error: error.message });
