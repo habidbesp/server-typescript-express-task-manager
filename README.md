@@ -1,3 +1,10 @@
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Dependencies](https://img.shields.io/badge/dependencies-%22express%2C%20mongoose%2C%20colors%22-brightgreen)
+![Dev Dependencies](https://img.shields.io/badge/dev%20dependencies-%22nodemon%2C%20typescript%2C%20ts--node%22-orange)
+
+![Express](https://img.shields.io/badge/Express-%5E4.21.1-blue)
+![MongoDB](https://img.shields.io/badge/MongoDB-%5E8.8.3-green)
+
 # Project & Task Management API
 
 This is a backend application built with Node.js, Express, and MongoDB. It provides an API to manage projects and tasks, where each project can have multiple tasks, and each task belongs to a single project.
@@ -139,12 +146,9 @@ Update task status
   }
   ```
 
-## Database Models
+## Future Improvements
 
-### Project
+- Authentication and authorization for secured endpoints.
+- Improved error handling.
 
-- Schema:
-
-  ```typescript
-
-  ```
+"May your code be bug-free and your coffee always strong. Happy coding and keep building amazing things!" ☕💻🚀
