@@ -19,9 +19,6 @@ router.post(
 
 router.get("/", ProjectController.getAllProjects);
 
-// Middleware to preload the project document whenever a route contains param "id".
-router.param("id", projectExists);
-
 router.get(
   "/:id",
   param("id").isMongoId().withMessage("ID not valid"),
@@ -29,11 +26,10 @@ router.get(
   ProjectController.getProjectById
 );
 
-// Middleware to preload the project document whenever a route contains param "id".
-router.param("id", projectExists);
-
+// Middleware to preload the project document whenever a route contains param "projectId".
+router.param("projectId", projectExists);
 router.put(
-  "/:id",
+  "/:projectId",
   body("projectName").notEmpty().withMessage("Project name is required"),
   body("clientName").notEmpty().withMessage("Client name is required"),
   body("description").notEmpty().withMessage("Project description is required"),
@@ -43,17 +39,13 @@ router.put(
 );
 
 router.delete(
-  "/:id",
+  "/:projectId",
   param("id").isMongoId().withMessage("ID not valid"),
   handleInputErrors,
   ProjectController.deleteProject
 );
 
 /** Routes for Task */
-
-// Middleware to preload the project document whenever a route contains param "projectId".
-router.param("projectId", projectExists);
-
 router.post(
   "/:projectId/tasks",
   body("name").notEmpty().withMessage("Task name is required"),
