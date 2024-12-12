@@ -33,14 +33,14 @@ router.put(
   body("projectName").notEmpty().withMessage("Project name is required"),
   body("clientName").notEmpty().withMessage("Client name is required"),
   body("description").notEmpty().withMessage("Project description is required"),
-  param("id").isMongoId().withMessage("ID not valid"),
+  param("projectId").isMongoId().withMessage("ID not valid"),
   handleInputErrors,
   ProjectController.updateProject
 );
 
 router.delete(
   "/:projectId",
-  param("id").isMongoId().withMessage("ID not valid"),
+  param("projectId").isMongoId().withMessage("ID not valid"),
   handleInputErrors,
   ProjectController.deleteProject
 );
