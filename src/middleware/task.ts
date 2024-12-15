@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import Task, { ITask } from "../models/Task";
+import { isValidObjectId } from "mongoose";
 
 // Extending the Express Request interface to include an optional 'task' property
 // This allows the task object to be added to the request in middleware, enabling access
@@ -19,6 +20,12 @@ export async function taskExists(
   next: NextFunction
 ): Promise<void> {
   try {
+    if (!isValidObjectId(req.params.taskId)) {
+      const error = new Error("ID not valid");
+      res.status(404).json({ error: error.message });
+      return;
+    }
+
     const task = await Task.findById(req.params.taskId);
     if (!task) {
       const error = new Error("Task not found.");
@@ -43,6 +50,22 @@ export function taskBelongsToProject(
       res.status(400).json({ error: error.message });
       return;
     }
+    next();
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function removeTaskFromProject(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const tasks = req.project.tasks;
+    req.project.tasks = tasks.filter(
+      (task) => task.toString() !== req.params.taskId
+    );
     next();
   } catch (error) {
     res.status(500).json({ error: error.message });

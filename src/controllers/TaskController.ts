@@ -49,12 +49,11 @@ export class TaskController {
 
   static deleteTask = async (req: Request, res: Response): Promise<void> => {
     try {
-      await Promise.allSettled([req.task.deleteOne(), req.project.save()]);
-      res
-        .status(200)
-        .send(
-          `Task "${req.task.name}" in project "${req.project.projectName}" was deleted - id: ${req.task.id}`
-        );
+      await Promise.allSettled([
+        req.task.deleteOne(),
+        req.project.updateOne({ $pull: { tasks: req.params.taskId } }),
+      ]);
+      res.status(200).send(`Task deleted successfully`);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
