@@ -34,7 +34,7 @@ export class AuthEmail {
             <p style="font-size: 16px; margin-bottom: 20px;">
             Visit the following link 👇
             </p>
-            <a href="" 
+            <a href="${process.env.FRONTEND_ORIGIN_PROD}/auth/confirm-account" 
             style="
                 display: inline-block;
                 text-decoration: none;
