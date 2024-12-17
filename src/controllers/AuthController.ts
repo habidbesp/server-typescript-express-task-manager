@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import User from "../models/User";
-import { hashPassword } from "../utils/auth";
+import { checkPassword, hashPassword } from "../utils/auth";
 import Token from "../models/Token";
 import { generateToken } from "../utils/token";
 import { transporter } from "../config/nodemailer";
@@ -57,7 +57,7 @@ export class AuthController {
 
       if (!tokenExist) {
         const error = new Error("Invalid Token");
-        res.status(401).json({ error: error.message });
+        res.status(404).json({ error: error.message });
         return;
       }
       const user = await User.findById(tokenExist.user);
@@ -65,7 +65,93 @@ export class AuthController {
 
       await Promise.allSettled([user.save(), tokenExist.deleteOne()]);
 
-      res.status(200).send("Account successfully confirmed");
+      res.status(200).send("Account has been successfully confirmed!");
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+
+  static login = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { email, password } = req.body;
+      const user = await User.findOne({ email });
+      if (!user) {
+        const error = new Error("User not found.");
+        res.status(404).json({ error: error.message });
+        return;
+      }
+
+      if (!user.confirmed) {
+        const token = new Token();
+        token.user = user.id;
+        token.token = generateToken();
+        await token.save();
+
+        //   Send email
+        await AuthEmail.sendConfirmationEmail({
+          email: user.email,
+          name: user.name,
+          token: token.token,
+        });
+
+        const error = new Error(
+          "This account has not been confirmed. We have just sent you a new email with a new token. Please confirm your account."
+        );
+        res.status(401).json({ error: error.message });
+        return;
+      }
+
+      // Authenticate password
+      const isPasswordCorrect = await checkPassword(password, user.password);
+
+      if (!isPasswordCorrect) {
+        const error = new Error("Pasword Incorrect");
+        res.status(401).json({ error: error.message });
+        return;
+      }
+
+      res.send("User has been successfully authenticated");
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+
+  static requestConfirmationToken = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const { email } = req.body;
+
+      // User exists
+      const user = await User.findOne({ email });
+      if (!user) {
+        const error = new Error("The user is not registered");
+        res.status(404).json({ error: error.message });
+        return;
+      }
+
+      if (user.confirmed) {
+        const error = new Error("The user has already been confirmed.");
+        res.status(403).json({ error: error.message });
+        return;
+      }
+
+      //   Generate Token
+      const token = new Token();
+      token.token = generateToken();
+      token.user = user.id;
+
+      //   Send email
+      await AuthEmail.sendConfirmationEmail({
+        email: user.email,
+        name: user.name,
+        token: token.token,
+      });
+
+      await Promise.allSettled([user.save(), token.save()]);
+
+      res.status(201).send("A new token has been sent to your email!");
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
