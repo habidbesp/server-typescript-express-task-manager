@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/AuthController";
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 import { handleInputErrors } from "../middleware/validation";
 
 const router = Router();
@@ -42,6 +42,36 @@ router.post(
   body("email").isEmail().withMessage("E-mail not valid"),
   handleInputErrors,
   AuthController.requestConfirmationToken
+);
+
+router.post(
+  "/reset-password",
+  body("email").isEmail().withMessage("E-mail not valid"),
+  handleInputErrors,
+  AuthController.resetPassword
+);
+
+router.post(
+  "/validate-token",
+  body("token").notEmpty().withMessage("Token is required"),
+  handleInputErrors,
+  AuthController.validateToken
+);
+
+router.post(
+  "/update-password/:token",
+  param("token").isNumeric().withMessage("Invalid Token"),
+  body("password")
+    .isLength({ min: 8 })
+    .withMessage("Password requares a minimum of 8 characters"),
+  body("password_confirmation").custom((value, { req }) => {
+    if (value !== req.body.password) {
+      throw new Error("Passwords are not equal");
+    }
+    return true;
+  }),
+  handleInputErrors,
+  AuthController.updatePasswordWithToken
 );
 
 export default router;

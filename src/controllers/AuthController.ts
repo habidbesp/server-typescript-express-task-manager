@@ -3,7 +3,6 @@ import User from "../models/User";
 import { checkPassword, hashPassword } from "../utils/auth";
 import Token from "../models/Token";
 import { generateToken } from "../utils/token";
-import { transporter } from "../config/nodemailer";
 import { AuthEmail } from "../emails/AuthEmail";
 
 export class AuthController {
@@ -152,6 +151,85 @@ export class AuthController {
       await Promise.allSettled([user.save(), token.save()]);
 
       res.status(201).send("A new token has been sent to your email!");
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+
+  static resetPassword = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { email } = req.body;
+
+      // User exists
+      const user = await User.findOne({ email });
+      if (!user) {
+        const error = new Error("The user is not registered");
+        res.status(404).json({ error: error.message });
+        return;
+      }
+
+      //   Generate Token
+      const token = new Token();
+      token.token = generateToken();
+      token.user = user.id;
+      await token.save();
+
+      //   Send email
+      await AuthEmail.sendPasswordResentToken({
+        email: user.email,
+        name: user.name,
+        token: token.token,
+      });
+
+      res
+        .status(201)
+        .send(
+          "We have sent you an email with instructions to reset your password!"
+        );
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+
+  static validateToken = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { token } = req.body;
+      const tokenExist = await Token.findOne({ token });
+
+      if (!tokenExist) {
+        const error = new Error("Invalid Token");
+        res.status(404).json({ error: error.message });
+        return;
+      }
+
+      res.status(200).send("Valid token, set a new password.");
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+
+  static updatePasswordWithToken = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const { password } = req.body;
+      const { token } = req.params;
+      const tokenExist = await Token.findOne({ token });
+
+      if (!tokenExist) {
+        const error = new Error("Invalid Token");
+        res.status(404).json({ error: error.message });
+        return;
+      }
+
+      const user = await User.findById(tokenExist.user);
+
+      user.password = await hashPassword(password);
+
+      await Promise.allSettled([user.save(), tokenExist.deleteOne()]);
+
+      res.status(200).send("Your password has been successfully updated");
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
