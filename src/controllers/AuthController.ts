@@ -4,6 +4,7 @@ import { checkPassword, hashPassword } from "../utils/auth";
 import Token from "../models/Token";
 import { generateToken } from "../utils/token";
 import { AuthEmail } from "../emails/AuthEmail";
+import { generateJWT } from "../utils/jwt";
 
 export class AuthController {
   static createAccount = async (req: Request, res: Response): Promise<void> => {
@@ -102,16 +103,16 @@ export class AuthController {
 
       // Authenticate password
       const isPasswordCorrect = await checkPassword(password, user.password);
-
       if (!isPasswordCorrect) {
-        const error = new Error("Pasword Incorrect");
+        const error = new Error("Invalid Password");
         res.status(401).json({ error: error.message });
         return;
       }
 
-      res.send("User has been successfully authenticated");
+      const token = generateJWT();
+      res.send(token);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).send({ error: error.message });
     }
   };
 
