@@ -20,7 +20,9 @@ export class ProjectController {
     res: Response
   ): Promise<void> => {
     try {
-      const projects = await Project.find({});
+      const projects = await Project.find({
+        $or: [{ manager: { $in: req.user.id } }],
+      });
       res.status(201).json(projects);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -38,6 +40,12 @@ export class ProjectController {
         res.status(404).json({ error: error.message });
         return;
       }
+
+      if (project.manager.toString() !== req.user.id.toString()) {
+        const error = new Error("Invalid Action.");
+        res.status(404).json({ error: error.message });
+        return;
+      }
       res.status(200).json(project);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -46,6 +54,13 @@ export class ProjectController {
 
   static updateProject = async (req: Request, res: Response): Promise<void> => {
     try {
+      if (req.project.manager.toString() !== req.user.id.toString()) {
+        const error = new Error(
+          "Only the manager is authorized to update the project."
+        );
+        res.status(404).json({ error: error.message });
+        return;
+      }
       req.project.projectName = req.body.projectName;
       req.project.clientName = req.body.clientName;
       req.project.description = req.body.description;
@@ -60,6 +75,14 @@ export class ProjectController {
 
   static deleteProject = async (req: Request, res: Response): Promise<void> => {
     try {
+      if (req.project.manager.toString() !== req.user.id.toString()) {
+        const error = new Error(
+          "Only the manager is authorized to delete the project."
+        );
+        res.status(404).json({ error: error.message });
+        return;
+      }
+
       await req.project.deleteOne();
       res
         .status(200)
