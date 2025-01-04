@@ -71,3 +71,20 @@ export async function removeTaskFromProject(
     res.status(500).json({ error: error.message });
   }
 }
+
+export function hasAuthorization(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
+  try {
+    if (req.user.id.toString() !== req.project.manager.toString()) {
+      const error = new Error("Invalid Action.");
+      res.status(400).json({ error: error.message });
+      return;
+    }
+    next();
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}

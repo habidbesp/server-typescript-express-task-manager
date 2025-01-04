@@ -32,6 +32,7 @@ export const authenticate = async (
 
     if (!user) {
       res.status(500).json({ error: "User not found, please register." });
+      return;
     }
 
     req.user = user;
