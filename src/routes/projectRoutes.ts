@@ -4,7 +4,11 @@ import { handleInputErrors } from "../middleware/validation";
 import { ProjectController } from "../controllers/ProjectController";
 import { TaskController } from "../controllers/TaskController";
 import { projectExists } from "../middleware/project";
-import { taskBelongsToProject, taskExists } from "../middleware/task";
+import {
+  hasAuthorization,
+  taskBelongsToProject,
+  taskExists,
+} from "../middleware/task";
 import { authenticate } from "../middleware/auth";
 import { TeamMemberController } from "../controllers/TeamController";
 
@@ -63,7 +67,7 @@ router.get("/:projectId/tasks", TaskController.getProjectTasks);
 // Middleware to preload the task document whenever a route contains param "taskId".
 router.param("taskId", taskExists);
 
-// Middleware to to verify if a task belongs to a project whenever a route contains param "taskId".
+// Middleware to verify if a task belongs to a project whenever a route contains param "taskId".
 router.param("taskId", taskBelongsToProject);
 
 router.get(
@@ -75,6 +79,7 @@ router.get(
 
 router.put(
   "/:projectId/tasks/:taskId",
+  hasAuthorization,
   param("taskId").isMongoId().withMessage("ID not valid"),
   body("name").notEmpty().withMessage("Task name is required"),
   body("description").notEmpty().withMessage("Task description is required"),
@@ -84,6 +89,7 @@ router.put(
 
 router.delete(
   "/:projectId/tasks/:taskId",
+  hasAuthorization,
   param("taskId").isMongoId().withMessage("ID not valid"),
   handleInputErrors,
   TaskController.deleteTask
