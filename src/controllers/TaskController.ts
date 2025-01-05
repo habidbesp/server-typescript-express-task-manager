@@ -30,7 +30,11 @@ export class TaskController {
 
   static getTaskById = async (req: Request, res: Response): Promise<void> => {
     try {
-      res.status(200).json(req.task);
+      const task = await Task.findById(req.task.id).populate({
+        path: "completedBy",
+        select: "_id name email",
+      });
+      res.status(200).json(task);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
@@ -64,7 +68,10 @@ export class TaskController {
     res: Response
   ): Promise<void> => {
     try {
-      req.task.status = req.body.status;
+      const { status } = req.body;
+      req.task.status = status;
+      const data = { user: req.user.id, status };
+      req.task.completedBy.push(data);
       await req.task.save();
       res.status(200).send(`Task status successfully updated`);
     } catch (error) {
