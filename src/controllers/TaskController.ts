@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import Task from "../models/Task";
+import Note from "../models/Note";
 
 export class TaskController {
   static createTask = async (req: Request, res: Response): Promise<void> => {
@@ -30,10 +31,15 @@ export class TaskController {
 
   static getTaskById = async (req: Request, res: Response): Promise<void> => {
     try {
-      const task = await Task.findById(req.task.id).populate({
-        path: "completedBy.user",
-        select: "_id name email",
-      });
+      const task = await Task.findById(req.task.id)
+        .populate({
+          path: "completedBy.user",
+          select: "_id name email",
+        })
+        .populate({
+          path: "notes",
+          populate: { path: "createdBy", select: "_id name email" },
+        });
       res.status(200).json(task);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -56,6 +62,7 @@ export class TaskController {
       await Promise.allSettled([
         req.task.deleteOne(),
         req.project.updateOne({ $pull: { tasks: req.params.taskId } }),
+        Note.deleteMany({ task: req.params.taskId }),
       ]);
       res.status(200).send(`Task deleted successfully`);
     } catch (error) {
