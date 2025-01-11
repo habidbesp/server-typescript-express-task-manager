@@ -241,4 +241,75 @@ export class AuthController {
     res.json(req.user);
     return;
   };
+
+  /** Profile controllers */
+
+  static updateProfile = async (req: Request, res: Response): Promise<void> => {
+    const { name, email } = req.body;
+
+    const userExist = await User.findOne({ email });
+
+    if (userExist && userExist.id.toString() !== req.user.id.toString()) {
+      const error = new Error("This email is already registered");
+      res.status(409).json({ error: error.message });
+      return;
+    }
+
+    req.user.name = name;
+    req.user.email = email;
+
+    try {
+      await req.user.save();
+      res.send("Profile updated successfully");
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+
+  static updateCurrentUserPassword = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    const { current_password, password } = req.body;
+
+    const user = await User.findById(req.user.id);
+
+    const isPasswordCorrect = await checkPassword(
+      current_password,
+      user.password
+    );
+
+    if (!isPasswordCorrect) {
+      const error = new Error("Current password is not correct");
+      res.status(401).json({ error: error.message });
+      return;
+    }
+
+    try {
+      user.password = await hashPassword(password);
+      await user.save();
+      res.send("Password updated successfully");
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+
+  static checkPassword = async (req: Request, res: Response) => {
+    try {
+      const { password } = req.body;
+
+      const user = await User.findById(req.user.id);
+
+      const isPasswordCorrect = await checkPassword(password, user.password);
+
+      if (!isPasswordCorrect) {
+        const error = new Error("Password is not correct");
+        res.status(401).json({ error: error.message });
+        return;
+      }
+      res.send("Password Correct");
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
 }

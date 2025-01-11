@@ -11,7 +11,7 @@ router.post(
   body("name").notEmpty().withMessage("Name is required"),
   body("password")
     .isLength({ min: 8 })
-    .withMessage("Password requares a minimum of 8 characters"),
+    .withMessage("Password requires a minimum of 8 characters"),
   body("password_confirmation").custom((value, { req }) => {
     if (value !== req.body.password) {
       throw new Error("Passwords are not equal");
@@ -76,5 +76,48 @@ router.post(
 );
 
 router.get("/user", authenticate, AuthController.user);
+
+/** Profile */
+router.put(
+  "/profile",
+  authenticate,
+  body("name").notEmpty().withMessage("Name is required"),
+  body("email").isEmail().withMessage("E-mail not valid"),
+  handleInputErrors,
+  AuthController.updateProfile
+);
+
+router.post(
+  "/update-password",
+  authenticate,
+  body("current_password")
+    .notEmpty()
+    .withMessage("Current password is required"),
+  body("password")
+    .custom((value, { req }) => {
+      if (value === req.body.current_password) {
+        throw new Error("Choose another password");
+      }
+      return true;
+    })
+    .isLength({ min: 8 })
+    .withMessage("Password requires a minimum of 8 characters"),
+  body("password_confirmation").custom((value, { req }) => {
+    if (value !== req.body.password) {
+      throw new Error("Passwords are not equal");
+    }
+    return true;
+  }),
+  handleInputErrors,
+  AuthController.updateCurrentUserPassword
+);
+
+router.post(
+  "/check-password",
+  authenticate,
+  body("password").notEmpty().withMessage("Password is required"),
+  handleInputErrors,
+  AuthController.checkPassword
+);
 
 export default router;
