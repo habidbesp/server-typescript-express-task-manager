@@ -37,18 +37,20 @@ export class ProjectController {
     res: Response
   ): Promise<void> => {
     try {
-      const project = await Project.findById(req.params.id)
-        .populate({
-          path: "tasks",
-          populate: { path: "completedBy.user", select: "_id name email" },
-        })
-        .populate({
-          path: "tasks",
-          populate: {
-            path: "notes",
-            populate: "createdBy",
-          },
-        });
+      // const project = await Project.findById(req.params.id)
+      //   .populate({
+      //     path: "tasks",
+      //     populate: { path: "completedBy.user", select: "_id name email" },
+      //   })
+      //   .populate({
+      //     path: "tasks",
+      //     populate: {
+      //       path: "notes",
+      //       populate: "createdBy",
+      //     },
+      //   });
+      const project = await Project.findById(req.params.id).populate("tasks");
+
       if (!project) {
         const error = new Error("Project not found.");
         res.status(404).json({ error: error.message });
@@ -71,13 +73,6 @@ export class ProjectController {
 
   static updateProject = async (req: Request, res: Response): Promise<void> => {
     try {
-      if (req.project.manager.toString() !== req.user.id.toString()) {
-        const error = new Error(
-          "Only the manager is authorized to update the project."
-        );
-        res.status(404).json({ error: error.message });
-        return;
-      }
       req.project.projectName = req.body.projectName;
       req.project.clientName = req.body.clientName;
       req.project.description = req.body.description;
@@ -92,18 +87,8 @@ export class ProjectController {
 
   static deleteProject = async (req: Request, res: Response): Promise<void> => {
     try {
-      if (req.project.manager.toString() !== req.user.id.toString()) {
-        const error = new Error(
-          "Only the manager is authorized to delete the project."
-        );
-        res.status(404).json({ error: error.message });
-        return;
-      }
-
       await req.project.deleteOne();
-      res
-        .status(200)
-        .send("Project: '" + req.project.projectName + "' was deleted");
+      res.status(200).send("Project was deleted");
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

@@ -44,6 +44,7 @@ router.put(
   body("description").notEmpty().withMessage("Project description is required"),
   param("projectId").isMongoId().withMessage("ID not valid"),
   handleInputErrors,
+  hasAuthorization,
   ProjectController.updateProject
 );
 
@@ -51,6 +52,7 @@ router.delete(
   "/:projectId",
   param("projectId").isMongoId().withMessage("ID not valid"),
   handleInputErrors,
+  hasAuthorization,
   ProjectController.deleteProject
 );
 
